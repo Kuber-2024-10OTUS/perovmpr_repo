@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+  namespace: homework
+
+spec:
+  containers:
+    - name: webserver
+      image: perovmpr/nginx-custom
+      imagePullPolicy: Always
+      env:
+        - name: DEFAULT_PORT
+          value: '8000'
+        - name: DEFAULT_HOME_DIR
+          value: '/homework'
+      volumeMounts:
+        - name: webserver-files
+          mountPath: /homework
+      lifecycle:
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "rm -rf /homework/*" ]
+
+  initContainers:
+    - name: init
+      image: busybox:1.37
+      command:
+        - wget
+        - "-O"
+        - "/init/index.html"
+        - https://examples.http-client.intellij.net/forms/post
+      volumeMounts:
+        - name: webserver-files
+          mountPath: /init
+
+  volumes:
+    - name: webserver-files
+      emptyDir: {}
