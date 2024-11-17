@@ -86,7 +86,10 @@ status code - 200
  ```shell
 curl -s -o /dev/null -w "status code - %{http_code} \n" homework.otus/other-address
 status code - 404
- - Проверим доступ к `homework.otus/homework/other-address.html`. Ошибка, так как такой такого файла нет на подах.
+```
+
+- Проверим доступ к `homework.otus/homework/other-address.html`. Ошибка, так как такой такого файла нет на подах.
+
  ```shell
 curl -s -o /dev/null -w "status code - %{http_code} \n" homework.otus/homework/other-address.html
 status code - 404
