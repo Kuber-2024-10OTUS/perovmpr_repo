@@ -16,7 +16,15 @@ kubectl apply -f namespace.yaml -f storageClass.yaml -f pvc.yaml -f deployment.y
 
 ## Как проверить работоспособность:
 - Подключиться к minikube командой `minikube ssh` и прописать в файле /etc/hosts ip для домена `homework.otus`.
-- Проверим доступ к `homework.otus`
+- Проверим что все поды запустились. Это будет говорить о том что `readinessProbe` отработало и PVC работает правильно.
+```shell
+kubectl get pods -o custom-columns=NAMESPACE:metadata.namespace,POD:metadata.name,READY-true:status.containerStatuses\[0\].ready
+NAMESPACE   POD                      READY-true
+homework    myapp-674db9669b-6pt8n   true
+homework    myapp-674db9669b-6r2k7   true
+homework    myapp-674db9669b-nc2pk   true
+```
+- Проверим доступ к `homework.otus/conf/file`
 
  ```shell
 docker@minikube:~$ curl -s  homework.otus/conf/file
