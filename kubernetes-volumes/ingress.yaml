@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress-root-path
+  namespace: homework
+spec:
+  rules:
+    - host: homework.otus
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-service
+                port:
+                  name: webserver
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress-homework-path
+  namespace: homework
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+    - host: homework.otus
+      http:
+        paths:
+          - path: /homework(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: my-service
+                port:
+                  name: webserver
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress-homework-conf-file
+  namespace: homework
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /conf/file/
+spec:
+  rules:
+    - host: homework.otus
+      http:
+        paths:
+          - path: /conf/file
+            pathType: Exact
+            backend:
+              service:
+                name: my-service
+                port:
+                  name: webserver
