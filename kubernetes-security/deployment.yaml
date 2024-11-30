@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  namespace: homework
+  labels: &labels
+    app: myapp
+
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+
+    spec:
+      serviceAccountName: monitoring
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: homework
+                    operator: In
+                    values:
+                      - "true"
+      containers:
+        - name: webserver
+          image: nginx:1.27.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: webserver
+              containerPort: 8000
+          env:
+            - name: DEFAULT_PORT
+              value: '8000'
+            - name: DEFAULT_HOME_DIR
+              value: '/homework'
+          volumeMounts:
+            - name: webserver-files
+              mountPath: /homework
+            - name: my-config
+              mountPath: /homework/conf/file/index.html
+              subPath: index.html
+              # nginx config
+            - name: my-config
+              mountPath: /etc/nginx/templates/default.conf.template
+              subPath: default.conf.template
+
+          readinessProbe:
+            httpGet:
+              port: webserver
+              path: /index.html
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "/bin/sh", "-c", "rm -rf /homework/*" ]
+
+      initContainers:
+        - name: init
+          image: busybox:1.37
+          command:
+            - wget
+            - "-O"
+            - "/init/index.html"
+            - https://examples.http-client.intellij.net/forms/post
+          volumeMounts:
+            - name: webserver-files
+              mountPath: /init
+
+      volumes:
+        - name: webserver-files
+          persistentVolumeClaim:
+            claimName: my-pvc
+        - name: my-config
+          configMap:
+            name: my-cm
