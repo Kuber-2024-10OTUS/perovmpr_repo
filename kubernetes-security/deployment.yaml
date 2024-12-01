@@ -76,7 +76,20 @@ spec:
           volumeMounts:
             - name: webserver-files
               mountPath: /init
-
+        - name: metrics
+          image: alpine/curl:8.9.1
+          volumeMounts:
+            - name: webserver-files
+              mountPath: /init
+          command: ["/bin/sh", "-c"]
+          args:
+          - |
+            SA=/var/run/secrets/kubernetes.io/serviceaccount
+            TOKEN=$(cat ${SA}/token)
+            NAMESPACE=$(cat ${SA}/namespace)
+            CACERT=${SA}/ca.crt
+            KUBEAPI=https://kubernetes.default.svc
+            curl --cacert ${CACERT} --header "Authorization: Bearer ${TOKEN}" -X GET ${KUBEAPI}/metrics -o /init/metrics.html
       volumes:
         - name: webserver-files
           persistentVolumeClaim:
