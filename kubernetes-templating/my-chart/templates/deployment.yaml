@@ -1,18 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp
-  namespace: homework
+  name: {{ include "my-chart.name" . }}
   labels: &labels
-    app: myapp
+    {{- include "my-chart.labels" . | nindent 4 }}
 
 spec:
-  replicas: 3
+  replicas: {{ .Values.replicaCount }}
   strategy:
-    type: RollingUpdate
+    type: {{ .Values.strategy.type }}
     rollingUpdate:
-      maxUnavailable: 1
-
+      maxUnavailable: {{ .Values.strategy.rollingUpdateMaxUnavailable }}
   selector:
     matchLabels: *labels
   template:
@@ -20,26 +18,25 @@ spec:
       labels: *labels
 
     spec:
-      serviceAccountName: monitoring
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ .Values.serviceAccount.monitoring.name }}
+      {{- with .Values.affinity }}
       affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: homework
-                    operator: In
-                    values:
-                      - "true"
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: webserver
-          image: nginx:1.27.2
-          imagePullPolicy: IfNotPresent
+          image: {{ printf "%s:%s" .Values.image.name .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: webserver
-              containerPort: 8000
+            - name: {{ .Values.portName }}
+              containerPort: {{ .Values.port }}
           env:
             - name: DEFAULT_PORT
-              value: '8000'
+              value: {{ .Values.port | quote  }}
             - name: DEFAULT_HOME_DIR
               value: '/homework'
           volumeMounts:
@@ -52,14 +49,15 @@ spec:
             - name: my-config
               mountPath: /etc/nginx/templates/default.conf.template
               subPath: default.conf.template
-
+  {{- if .Values.enableReadinessProbe }}
           readinessProbe:
             httpGet:
-              port: webserver
+              port: {{ .Values.portName }}
               path: /index.html
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 5
+  {{- end }}
           lifecycle:
             preStop:
               exec:
@@ -81,19 +79,19 @@ spec:
           volumeMounts:
             - name: webserver-files
               mountPath: /init
-          command: ["/bin/sh", "-c"]
+          command: [ "/bin/sh", "-c" ]
           args:
-          - |
-            SA=/var/run/secrets/kubernetes.io/serviceaccount
-            TOKEN=$(cat ${SA}/token)
-            NAMESPACE=$(cat ${SA}/namespace)
-            CACERT=${SA}/ca.crt
-            KUBEAPI=https://kubernetes.default.svc
-            curl --cacert ${CACERT} --header "Authorization: Bearer ${TOKEN}" -X GET ${KUBEAPI}/metrics -o /init/metrics.html
+            - |
+              SA=/var/run/secrets/kubernetes.io/serviceaccount
+              TOKEN=$(cat ${SA}/token)
+              NAMESPACE=$(cat ${SA}/namespace)
+              CACERT=${SA}/ca.crt
+              KUBEAPI=https://kubernetes.default.svc
+              curl --cacert ${CACERT} --header "Authorization: Bearer ${TOKEN}" -X GET ${KUBEAPI}/metrics -o /init/metrics.html
       volumes:
         - name: webserver-files
           persistentVolumeClaim:
-            claimName: my-pvc
+            claimName:  {{ include "my-chart.name" .}}
         - name: my-config
           configMap:
-            name: my-cm
+            name: {{ include "my-chart.name" . }}

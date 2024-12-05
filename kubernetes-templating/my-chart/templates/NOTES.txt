@@ -1,0 +1,3 @@
+Для доступа выполните запрос по адресу:
+  http{{ if .Values.ingress.enableTls }}s{{ end }}://{{ .Values.ingress.hostName }}
+

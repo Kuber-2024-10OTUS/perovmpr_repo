@@ -1,0 +1,73 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name:  {{ include "my-chart.name" . }}-root-path
+spec:
+  rules:
+    - host: {{ .Values.ingress.hostName }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "my-chart.name" . }}
+                port:
+                  name: {{ .Values.service.portName }}
+ {{- if .Values.ingress.enableTls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.hostName | quote }}
+      secretName: {{ .Values.ingress.secretName }}
+  {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name:  {{ include "my-chart.name" . }}-homework-path
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+    - host: {{ .Values.ingress.hostName }}
+      http:
+        paths:
+          - path: /homework(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ include "my-chart.name" . }}
+                port:
+                  name: {{ .Values.service.portName }}
+ {{- if .Values.ingress.enableTls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.hostName | quote }}
+      secretName: {{ .Values.ingress.secretName }}
+  {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name:  {{ include "my-chart.name" . }}-homework-conf-file
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /conf/file/
+spec:
+  rules:
+    - host: {{ .Values.ingress.hostName }}
+      http:
+        paths:
+          - path: /conf/file
+            pathType: Exact
+            backend:
+              service:
+                name: {{ include "my-chart.name" . }}
+                port:
+                  name: {{ .Values.service.portName }}
+ {{- if .Values.ingress.enableTls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.hostName | quote }}
+      secretName: {{ .Values.ingress.secretName }}
+  {{- end }}

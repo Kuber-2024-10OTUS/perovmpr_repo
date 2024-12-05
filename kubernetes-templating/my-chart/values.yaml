@@ -1,0 +1,70 @@
+fullName: my-app
+
+labels:
+  app: my-app
+
+serviceAccount:
+  monitoring:
+    name: monitoring
+  cd:
+    name: cd
+role:
+  namespaceAdmin:
+    name: admin
+    kind: Role
+  clusterMonitoring:
+    name: monitoring-cluster-role
+    kind: ClusterRole
+
+
+storageClass:
+  reclaimPolicy: Retain
+
+persistentVolumeClaim:
+  accessModes:
+    - ReadWriteOnce
+  resourcesRequestsStorage: 10Mi
+
+service:
+  type: ClusterIP
+  port: 80
+  portName: webserver
+
+replicaCount: 1
+port: 8080
+portName: webserver
+strategy:
+  type: RollingUpdate
+  rollingUpdateMaxUnavailable: 1
+strategyType: RollingUpdate
+image:
+  name: nginx
+  tag: 1.27.2
+  pullPolicy: IfNotPresent
+enableReadinessProbe: true
+ingress:
+  hostName: homework.otus
+  enableTls: false
+  secretName: chart-example-tls
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: homework
+              operator: In
+              values:
+                - "true"
+redis:
+  architecture: standalone
+  replicaCount: 1
+  master:
+    replicaCount: 0
+    persistence:
+      enabled: true
+      size: 8Gi
+  sentinel:
+    enabled: false
+  cluster:
+    enabled: false
