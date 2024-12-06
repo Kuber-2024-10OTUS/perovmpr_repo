@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-chart.name" . }}
+  labels: &labels
+    {{- include "my-chart.labels" . | nindent 4 }}
+
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: {{ .Values.strategy.type }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.strategy.rollingUpdateMaxUnavailable }}
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ .Values.serviceAccount.monitoring.name }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: webserver
+          image: {{ printf "%s:%s" .Values.image.name .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: {{ .Values.portName }}
+              containerPort: {{ .Values.port }}
+          env:
+            - name: DEFAULT_PORT
+              value: {{ .Values.port | quote  }}
+            - name: DEFAULT_HOME_DIR
+              value: '/homework'
+          volumeMounts:
+            - name: webserver-files
+              mountPath: /homework
+            - name: my-config
+              mountPath: /homework/conf/file/index.html
+              subPath: index.html
+              # nginx config
+            - name: my-config
+              mountPath: /etc/nginx/templates/default.conf.template
+              subPath: default.conf.template
+  {{- if .Values.enableReadinessProbe }}
+          readinessProbe:
+            httpGet:
+              port: {{ .Values.portName }}
+              path: /index.html
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+  {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "/bin/sh", "-c", "rm -rf /homework/*" ]
+
+      initContainers:
+        - name: init
+          image: busybox:1.37
+          command:
+            - wget
+            - "-O"
+            - "/init/index.html"
+            - https://examples.http-client.intellij.net/forms/post
+          volumeMounts:
+            - name: webserver-files
+              mountPath: /init
+        - name: metrics
+          image: alpine/curl:8.9.1
+          volumeMounts:
+            - name: webserver-files
+              mountPath: /init
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              SA=/var/run/secrets/kubernetes.io/serviceaccount
+              TOKEN=$(cat ${SA}/token)
+              NAMESPACE=$(cat ${SA}/namespace)
+              CACERT=${SA}/ca.crt
+              KUBEAPI=https://kubernetes.default.svc
+              curl --cacert ${CACERT} --header "Authorization: Bearer ${TOKEN}" -X GET ${KUBEAPI}/metrics -o /init/metrics.html
+      volumes:
+        - name: webserver-files
+          persistentVolumeClaim:
+            claimName:  {{ include "my-chart.name" .}}
+        - name: my-config
+          configMap:
+            name: {{ include "my-chart.name" . }}

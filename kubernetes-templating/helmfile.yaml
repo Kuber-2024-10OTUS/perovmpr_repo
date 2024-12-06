@@ -1,0 +1,41 @@
+repositories:
+  - name: bitnami
+    url: registry-1.docker.io/bitnamicharts
+    oci: true
+
+releases:
+  - name: prod
+    namespace: prod
+    chart: bitnami/kafka
+    version: 30.1.8
+    values:
+      - broker:
+          replicaCount: 5
+      - image:
+          tag: 3.5.2
+      - listeners:
+          interbroker:
+            protocol: SASL_PLAINTEXT
+          client:
+            protocol: SASL_PLAINTEXT
+
+  - name: dev
+    namespace: dev
+    chart: bitnami/kafka
+    version: 30.1.8
+    values:
+      - image:
+          tag: latest
+      - controller:
+          replicaCount: 1
+          persistence:
+            enabled: false
+      - broker:
+          replicaCount: 1
+          persistence:
+            enabled: false
+      - listeners:
+          interbroker:
+            protocol: PLAINTEXT
+          client:
+            protocol: PLAINTEXT

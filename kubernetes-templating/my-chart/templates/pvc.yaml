@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "my-chart.name" . }}
+spec:
+  accessModes: {{ .Values.persistentVolumeClaim.accessModes }}
+  storageClassName: {{ include "my-chart.name" . }}
+  resources:
+    requests:
+      storage: {{ .Values.persistentVolumeClaim.resourcesRequestsStorage }}
