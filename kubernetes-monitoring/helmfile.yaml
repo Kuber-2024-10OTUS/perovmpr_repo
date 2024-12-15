@@ -1,0 +1,48 @@
+repositories:
+  - name: bitnami
+    url: registry-1.docker.io/bitnamicharts
+    oci: true
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+
+releases:
+  - name: prometheus
+    namespace: homework
+    chart: bitnami/kube-prometheus
+    version: 10.2.0
+    values:
+      - alertmanager:
+          enabled: false
+  - name: grafana
+    namespace: homework
+    chart: grafana/grafana
+    version: 8.7.0
+    values:
+      - ingress:
+          enabled: true
+          hosts:
+            - grafana.homework.otus
+      - dashboardProviders:
+          dashboardproviders.yaml:
+            apiVersion: 1
+            providers:
+              - name: 'nginx'
+                orgId: 1
+                folder: ''
+                type: file
+                options:
+                  path: /var/lib/grafana/dashboards/nginx
+
+      - dashboards:
+          nginx:
+            nginx-dashboard.json:
+              url: https://raw.githubusercontent.com/nginxinc/nginx-prometheus-exporter/refs/heads/main/grafana/dashboard.json
+      - datasources:
+          datasources.yaml:
+            apiVersion: 1
+            datasources:
+              - name: Prometheus
+                type: prometheus
+                url: http://prometheus-kube-prometheus-prometheus.homework.svc.cluster.local:9090
+                access: proxy
+                isDefault: true
