@@ -34,7 +34,7 @@ kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-pass
 ```
 Сделать порт форвординг
 ```shell
-kubectl port-forward --namespace monitoring svc/grafana 3000:3000
+kubectl port-forward --namespace monitoring svc/grafana 3000:80
 ```
 Скриншот с логами loki в графане.
 ![img.png](img.png)
