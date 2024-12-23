@@ -4,7 +4,7 @@ metadata:
   name: {{ include "my-chart.name" . }}
 spec:
   accessModes: {{ .Values.persistentVolumeClaim.accessModes }}
-  storageClassName: {{ include "my-chart.name" . }}
+  storageClassName: {{ .Values.persistentVolumeClaim.storageClassName }}
   resources:
     requests:
       storage: {{ .Values.persistentVolumeClaim.resourcesRequestsStorage }}
