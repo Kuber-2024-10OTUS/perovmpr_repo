@@ -21,6 +21,7 @@ storageClass:
   reclaimPolicy: Retain
 
 persistentVolumeClaim:
+  storageClassName: standard
   accessModes:
     - ReadWriteOnce
   resourcesRequestsStorage: 10Mi
