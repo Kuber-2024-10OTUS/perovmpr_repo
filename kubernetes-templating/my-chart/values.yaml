@@ -18,6 +18,7 @@ role:
 
 
 storageClass:
+  enabled: false
   reclaimPolicy: Retain
 
 persistentVolumeClaim:
