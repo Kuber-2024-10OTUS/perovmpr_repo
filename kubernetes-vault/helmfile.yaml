@@ -1,0 +1,12 @@
+repositories:
+  - name: consul
+    url: git+https://github.com/hashicorp/consul-k8s@charts/consul?ref=v1.6.2&sparse=0
+
+releases:
+  - name: consul
+    namespace: consul
+    chart: consul/consul
+    version: 1.6.2
+    values:
+      - server:
+          replicas: 3
