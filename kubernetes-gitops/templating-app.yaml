@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubernetes-templating
+  namespace: argocd
+spec:
+  project: otus
+  source:
+    repoURL: https://github.com/Kuber-2024-10OTUS/perovmpr_repo.git
+    targetRevision: HEAD
+    path: kubernetes-templating/my-chart
+    helm:
+      releaseName: my-app
+      values: |
+        replicaCount: 3
+        storageClass:
+          enabled: false
+        persistentVolumeClaim:
+          storageClassName: yc-network-hdd
+          resourcesRequestsStorage: 16Mi
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-role.kubernetes.io
+                      operator: In
+                      values:
+                        - "worker"
+  destination:
+    name: in-cluster
+    namespace: homework-helm
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - CreateNamespace=true

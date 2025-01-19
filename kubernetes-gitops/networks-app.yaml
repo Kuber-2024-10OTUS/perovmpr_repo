@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubernetes-networks
+  namespace: argocd
+spec:
+  project: otus
+  source:
+    repoURL: https://github.com/Kuber-2024-10OTUS/perovmpr_repo
+    targetRevision: HEAD
+    path: kubernetes-networks
+  destination:
+    name: in-cluster
+    namespace: homework
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - CreateNamespace=true

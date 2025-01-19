@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: otus
+  namespace: argocd
+spec:
+  destinations:
+    - name: in-cluster
+      namespace: '*'
+      server: https://kubernetes.default.svc
+  sourceRepos:
+    - https://github.com/Kuber-2024-10OTUS/perovmpr_repo
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: Namespace
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
