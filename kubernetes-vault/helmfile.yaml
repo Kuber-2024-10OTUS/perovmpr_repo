@@ -3,6 +3,8 @@ repositories:
     url: git+https://github.com/hashicorp/consul-k8s@charts/consul?ref=v1.6.2&sparse=0
   - name: vault
     url: git+https://github.com/hashicorp/vault-helm@/?ref=v0.29.1&sparse=0
+  - name: external-secrets
+    url: https://external-secrets.io
 
 releases:
   - name: consul
@@ -33,3 +35,9 @@ releases:
                 path = "vault"
                 address = "consul-consul-server.consul.svc.cluster.local:8500"
               }
+
+
+  - name: external-secrets
+    namespace: vault
+    chart: external-secrets/external-secrets
+    version: 0.13.0
