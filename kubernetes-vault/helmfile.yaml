@@ -4,7 +4,7 @@ repositories:
   - name: vault
     url: git+https://github.com/hashicorp/vault-helm@/?ref=v0.29.1&sparse=0
   - name: external-secrets
-    url: https://external-secrets.io
+    url: git+https://github.com/external-secrets/external-secrets.git@/deploy/charts/external-secrets/?ref=v0.13.0&sparse=0
 
 releases:
   - name: consul
@@ -25,7 +25,7 @@ releases:
             replicas: 3
             config: |
               ui = true
-  
+
               listener "tcp" {
                 tls_disable = 1
                 address = "[::]:8200"
@@ -40,4 +40,6 @@ releases:
   - name: external-secrets
     namespace: vault
     chart: external-secrets/external-secrets
-    version: 0.13.0
+    version: 0.12.1
+    values:
+      - installCRDs: false
