@@ -1,0 +1,45 @@
+repositories:
+  - name: consul
+    url: git+https://github.com/hashicorp/consul-k8s@charts/consul?ref=v1.6.2&sparse=0
+  - name: vault
+    url: git+https://github.com/hashicorp/vault-helm@/?ref=v0.29.1&sparse=0
+  - name: external-secrets
+    url: git+https://github.com/external-secrets/external-secrets.git@/deploy/charts/external-secrets/?ref=v0.13.0&sparse=0
+
+releases:
+  - name: consul
+    namespace: consul
+    chart: consul/consul
+    version: 1.6.2
+    values:
+      - server:
+          replicas: 3
+  - name: vault
+    namespace: vault
+    chart: vault/vault
+    version: 0.29.1
+    values:
+      - server:
+          ha:
+            enabled: true
+            replicas: 3
+            config: |
+              ui = true
+
+              listener "tcp" {
+                tls_disable = 1
+                address = "[::]:8200"
+                cluster_address = "[::]:8201"
+              }
+              storage "consul" {
+                path = "vault"
+                address = "consul-consul-server.consul.svc.cluster.local:8500"
+              }
+
+
+  - name: external-secrets
+    namespace: vault
+    chart: external-secrets/external-secrets
+    version: 0.12.1
+    values:
+      - installCRDs: false
