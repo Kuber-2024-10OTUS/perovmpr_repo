@@ -28,7 +28,7 @@ type MySQLReconciler struct {
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=core,resources=persistentvolume,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=persistentvolumes,verbs=get;list;watch;create;update;patch;delete
 
 func (r *MySQLReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
@@ -95,13 +95,11 @@ func (r *MySQLReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
-	pvName := pv.Name
-
 	pvc := &corev1.PersistentVolumeClaim{}
 	err = r.Get(ctx, req.NamespacedName, pvc)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new PVC
-		pvc := r.pvcForMySQL(mysql, pvName)
+		pvc := r.pvcForMySQL(mysql, pv)
 		log.Info("Creating a new PVC", "PVC.Namespace", pvc.Namespace, "PVC.Name", pvc.Name)
 		err = r.Create(ctx, pvc)
 		if err != nil {
@@ -189,7 +187,8 @@ func (r *MySQLReconciler) serviceForMySQL(m *otusv1.MySQL) *corev1.Service {
 }
 
 // pvcForMySQL returns a MySQL PVC object
-func (r *MySQLReconciler) pvcForMySQL(m *otusv1.MySQL, pvName string) *corev1.PersistentVolumeClaim {
+func (r *MySQLReconciler) pvcForMySQL(m *otusv1.MySQL, pv *corev1.PersistentVolume) *corev1.PersistentVolumeClaim {
+	storageClassName := "yc-network-hdd"
 	pvc := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      m.Name,
@@ -199,12 +198,14 @@ func (r *MySQLReconciler) pvcForMySQL(m *otusv1.MySQL, pvName string) *corev1.Pe
 			AccessModes: []corev1.PersistentVolumeAccessMode{
 				corev1.ReadWriteOnce,
 			},
+
+			StorageClassName: &storageClassName,
 			Resources: corev1.VolumeResourceRequirements{
 				Requests: corev1.ResourceList{
 					corev1.ResourceStorage: resource.MustParse(m.Spec.StorageSize),
 				},
 			},
-			VolumeName: pvName,
+			VolumeName: pv.Name,
 		},
 	}
 	// Set MySQL instance as the owner and controller
@@ -229,7 +230,7 @@ func (r *MySQLReconciler) pvForMySQL(m *otusv1.MySQL) *corev1.PersistentVolume {
 				corev1.ReadWriteOnce,
 			},
 			PersistentVolumeReclaimPolicy: corev1.PersistentVolumeReclaimDelete,
-			StorageClassName:              "",
+			StorageClassName:              "yc-network-hdd",
 			PersistentVolumeSource: corev1.PersistentVolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
 					Path: "/tmp/hostpath_pv/" + m.Name + "-pv/",
