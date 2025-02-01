@@ -19,6 +19,7 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - persistentvolume
   - persistentvolumeclaims
   - services
   verbs:
