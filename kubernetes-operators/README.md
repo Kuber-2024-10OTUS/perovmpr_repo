@@ -25,11 +25,12 @@ kubectl apply -f sc.yaml -f serviceaccount.yaml -f rbac.yaml -f mysql.yaml -f cr
  - Соберём образ оператора и загрузим его в docker hub
 ```shell
 cd operator
-make docker-build docker-push IMG=perovmpr/mysql-operator:v1
+make docker-build docker-push IMG=perovmpr/mysql-operator:v1.0.0
+make build-installer IMG=perovmpr/mysql-operator:v1.0.0
 ```
  - Установим CRD
 ```shell
-make install
+k apply -f dist/install.yaml  
 ```
 - Создадим CRD `MySQL`
 ```shell
