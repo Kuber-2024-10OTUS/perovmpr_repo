@@ -26,7 +26,7 @@ make build-installer IMG=perovmpr/mysql-operator:v1.0.0
 ```
  - Установим CRD
 ```shell
-k apply -f dist/install.yaml  
+kubectl delete -f dist/install.yaml  
 ```
 - Создадим CRD `MySQL`
 ```shell
