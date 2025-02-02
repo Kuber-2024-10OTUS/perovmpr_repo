@@ -16,10 +16,6 @@ cd kubernetes-operators
 # Установить CRD и оператор
 kubectl apply -f sc.yaml -f serviceaccount.yaml -f rbac.yaml -f mysql.yaml -f crd.yaml -f deployment.yaml
 ```  
-```shell
-# Удаление после проверки 
-❯ kubectl delete -f sc.yaml -f serviceaccount.yaml -f rbac.yaml -f mysql.yaml -f crd.yaml -f deployment.yaml
-```  
 
 ### Установить CRD `MySQL` и собственный оператор 
  - Соберём образ оператора и загрузим его в docker hub
@@ -99,16 +95,57 @@ deployment.apps "mysql-operator" deleted
 ❯ kubectl get deployments.apps mysql-operator
 Error from server (NotFound): deployments.apps "mysql-operator" not found
 ```
-### Проверка CRD `MySQL` и оператор из основного ДЗ
+### Проверка CRD `MySQL` и из дополнительного задания и собственного оператора
  - Проверим на корректность установки и работу оператора
 ```shell
 ❯ kubectl get po -n operator-system
 NAME                                           READY   STATUS    RESTARTS   AGE
 operator-controller-manager-7575f9f68f-8h7zg   1/1     Running   0          23s
 ```
- - Создадим CRD `MySQL`
+ - Проверить установленный mysql сервер
 ```shell
-❯ kubectl apply -f mysql_perovmpr_operator.yaml
+# Проверить PV 
+❯ kubectl get pv example-mysql-pv
+NAME               CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                   STORAGECLASS     REASON   AGE
+example-mysql-pv   1Gi        RWO            Delete           Bound    default/example-mysql   yc-network-hdd            10h
+# Проверить PVC 
+❯ kubectl get pvc example-mysql
+NAME            STATUS   VOLUME             CAPACITY   ACCESS MODES   STORAGECLASS     AGE
+example-mysql   Bound    example-mysql-pv   1Gi        RWO            yc-network-hdd   11h
+# Проверить установленный mysql сервер
+❯ kubectl get deployments.apps example-mysql 
+NAME            READY   UP-TO-DATE   AVAILABLE   AGE
+example-mysql   0/1     1            0           10h
+#Проверить mysql 
+❯ kubectl exec  example-mysql-64f9cc486-ltfz8  -ti -- mysql -uroot -pexamplepass
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.7.44 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2023, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql>
+ - Проверим корректное удаление CRD и его зависимостей. Все развёрнутые ресурсы удалены. 
+```shell
+# Удалить CRD
+❯ kubectl delete mysqls.otus.homework/example-mysql
+mysql.otus.homework "example-mysql" deleted
+# Проверить удаление mysql сервера
+❯  kubectl get deployments.apps example-mysql
+Error from server (NotFound): deployments.apps "example-mysql" not found
+# Проверить удаление pvc
+❯  kubectl get pvc example-mysql
+Error from server (NotFound): persistentvolumeclaims "example-mysql" not found
+# Проверить удаление pv
+❯ kubectl get pv example-mysql-pv
+Error from server (NotFound): persistentvolumes "example-mysql-pv" not found
 ```
 ## PR checklist:
- - [ ] Выставлен label с темой домашнего задания
+ - [x] Выставлен label с темой домашнего задания
