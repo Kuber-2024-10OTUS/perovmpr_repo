@@ -35,6 +35,7 @@ drwxr-xr-x    1 root     root          4096 Feb  2 18:32 ..
 -rw-rw-rw-    1 root     root            61 Feb  2 18:32 file_1738521148.txt
 -rw-rw-rw-    1 root     root            61 Feb  2 18:32 file_1738521152.txt
 ```
+ - Проверить что в Yandex Object Storage есть файлы из предыдущего пункта. 
 
 ## PR checklist:
 - [ ] Выставлен label с темой домашнего задания
