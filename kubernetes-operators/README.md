@@ -132,6 +132,7 @@ owners.
 Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
 
 mysql>
+```
  - Проверим корректное удаление CRD и его зависимостей. Все развёрнутые ресурсы удалены. 
 ```shell
 # Удалить CRD
