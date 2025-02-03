@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubernetes.io/psp: privileged-psp
+  name: debugger-pod
+spec:
+  containers:
+    - image: perovmpr/ubuntu-strace-curl:0.0.2
+      imagePullPolicy: Always
+      name: debugger
+      tty: true
+      securityContext:
+        privileged: true
+  hostIPC: true
+  hostNetwork: true
+  hostPID: true
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Never
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    fsGroup: 0
