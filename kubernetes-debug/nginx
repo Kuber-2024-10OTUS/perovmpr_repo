@@ -1,0 +1,56 @@
+#include <tunables/global>
+profile nginx flags=(attach_disconnected) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  # Сетевые разрешения
+  network inet stream,
+  network inet6 stream,
+
+  # Разрешения для nginx
+  /usr/sbin/nginx mr,
+  /var/www/** r,
+  /var/log/nginx/** rw,
+  /etc/nginx/** r,
+  /var/run/nginx.pid rw,
+  /tmp/nginx_client_temp/** rw,
+  /tmp/nginx_proxy_temp/** rw,
+  /tmp/nginx_fastcgi_temp/** rw,
+  /tmp/nginx_uwsgi_temp/** rw,
+  /tmp/nginx_scgi_temp/** rw,
+  /var/cache/nginx/** rwk,  # Добавляем "k" для разрешения изменения атрибутов
+
+  # Capability для chown, setgid, setuid
+  capability chown,
+  capability dac_override,
+  capability dac_read_search,
+  capability setgid,
+  capability setuid,
+
+  # Разрешения для strace
+  capability sys_ptrace,
+  capability sys_admin,
+  /usr/bin/strace mr,
+  /proc/** r,
+  /tmp/** rw,
+
+  # Дополнительные разрешения для отладки
+  /proc/[0-9]*/ r,
+  /proc/[0-9]*/status r,
+  /proc/[0-9]*/maps r,
+  /proc/[0-9]*/mem r,
+  /proc/[0-9]*/fd/ r,
+  /proc/[0-9]*/cmdline r,
+  /proc/[0-9]*/stat r,
+
+  # Разрешения для устройств
+  /dev/pts/* rw,
+  /dev/null rw,
+  /dev/tty rw,
+  /dev/urandom r,
+
+  # Дополнительные разрешения для proc
+  /proc/sys/kernel/shm* r,
+  /proc/sys/kernel/sem r,
+  /proc/sys/kernel/msgmax r,
+}
