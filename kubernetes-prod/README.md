@@ -1,3 +1,4 @@
+# Установка k8s
 ```shell
 
 sudo chmod +x setup-k8s-1.31.sh
@@ -29,6 +30,7 @@ sudo kubeadm join 10.129.0.8:6443 --token tbni7y.xw8w4ny8n282raqd \
 ```shell
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 ```
+# Проверка работы установленного кластера
 ```shell
 pier@master1:~$  kubectl get nodes -o wide
 NAME      STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
@@ -37,8 +39,7 @@ worker1   Ready    <none>          19m     v1.31.6   10.129.0.12   <none>       
 worker2   Ready    <none>          4m40s   v1.31.6   10.129.0.9    <none>        Ubuntu 24.04.2 LTS   6.8.0-53-generic   containerd://1.7.25
 worker3   Ready    <none>          2m53s   v1.31.6   10.129.0.30   <none>        Ubuntu 24.04.2 LTS   6.8.0-53-generic   containerd://1.7.25
 ```
-
- - Задрейнить ноду
+# Обновление Кластера
 ```shell
 K8S_VERSION=1.32
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
@@ -71,7 +72,65 @@ sudo kubeadm upgrade plan
 
 
 ```
- - Обновить мастер ноды
+ - Обновить мастер ноды 1.32.0
 ```shell
 sudo kubeadm upgrade apply v1.32.0
+```
+ - Обновить kubelet
+```shell
+sudo apt update
+sudo apt-mark unhold kubelet kubeadm && \
+sudo apt-get update && sudo apt-get install -y kubelet='1.32.2-*' kubeadm='1.32.2-*' && \
+sudo apt-mark hold kubelet kubeadm
+```
+
+- Обновить ноду worker1
+```shell
+kubectl drain worker1 --ignore-daemonsets
+K8S_VERSION=1.32
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt update
+sudo apt-mark unhold kubelet kubeadm&& \
+sudo apt-get update && sudo apt-get install -y kubelet='1.32.2-*' kubeadm='1.32.2-*' && \
+sudo apt-mark hold kubelet kubeadm
+kubectl uncordon worker1
+```
+- Обновить ноду worker2
+```shell
+kubectl drain worker2 --ignore-daemonsets
+K8S_VERSION=1.32
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt update
+sudo apt-mark unhold kubelet kubeadm&& \
+sudo apt-get update && sudo apt-get install -y kubelet='1.32.2-*' kubeadm='1.32.2-*' && \
+sudo apt-mark hold kubelet kubeadm
+kubectl uncordon worker2
+ ```
+- Обновить ноду worker3
+```shell
+kubectl drain worker3 --ignore-daemonsets
+K8S_VERSION=1.32
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt update
+sudo apt-mark unhold kubelet kubeadm&& \
+sudo apt-get update && sudo apt-get install -y kubelet='1.32.2-*' kubeadm='1.32.2-*' && \
+sudo apt-mark hold kubelet kubeadm
+kubectl uncordon worker3
+```
+
+- Обновить мастер ноды до 1.32.2
+```shell
+kubeadm upgrade apply v1.32.2
+```
+- Готово
+```shell
+pier@master1:~$ kubectl get nodes -o wide
+NAME      STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+master1   Ready    control-plane   6d10h   v1.32.2   10.129.0.8    <none>        Ubuntu 24.04.2 LTS   6.8.0-53-generic   containerd://1.7.25
+worker1   Ready    <none>          6d10h   v1.32.2   10.129.0.12   <none>        Ubuntu 24.04.2 LTS   6.8.0-53-generic   containerd://1.7.25
+worker2   Ready    <none>          6d9h    v1.32.2   10.129.0.9    <none>        Ubuntu 24.04.2 LTS   6.8.0-53-generic   containerd://1.7.25
+worker3   Ready    <none>          6d9h    v1.32.2   10.129.0.30   <none>        Ubuntu 24.04.2 LTS   6.8.0-53-generic   containerd://1.7.25
 ```
