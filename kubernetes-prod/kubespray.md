@@ -4,6 +4,18 @@
 [//]: # (sudo apt install ansible)
 
 ssh-keygen -t rsa
+- Скопировать сертификаты на виртуальную машину c ansible
+```shell
+scp ~/.ssh/ansible/id_rsa pier@158.160.0.1:/home/pier/.ssh/
+```
+- Скопировать сертификаты на виртуальные машины 
+```shell
+ssh-copy-id -i ~/.ssh/ansible/id_rsa.pub pier@158.160.72.2
+ssh-copy-id -i ~/.ssh/ansible/id_rsa.pub pier@158.160.72.3
+ssh-copy-id -i ~/.ssh/ansible/id_rsa.pub pier@158.160.72.4
+ssh-copy-id -i ~/.ssh/ansible/id_rsa.pub pier@158.160.72.5
+ssh-copy-id -i ~/.ssh/ansible/id_rsa.pub pier@158.160.72.6
+```
 
 git clone https://github.com/kubernetes-sigs/kubespray.git
 cd kubespray
@@ -16,6 +28,7 @@ pip install -r requirements.txt
 
 cp -r inventory/sample/ inventory/mycluster
 ```shell
+sudo nano inventory/mycluster/inventory.ini
 [kube_control_plane] 
 master1 ansible_host=10.129.0.32
 master2 ansible_host=10.129.0.24
